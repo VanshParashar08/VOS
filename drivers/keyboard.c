@@ -47,6 +47,7 @@ static const char kbd_us[128] = {
 };
 
 static void keyboard_callback(registers_t *regs) {
+    (void)regs;
     uint8_t scancode = inb(0x60);
     if (scancode < 128) {
         char c = kbd_us[scancode];

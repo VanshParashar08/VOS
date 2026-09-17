@@ -272,7 +272,7 @@ void desktop_render(void) {
         }
         // 5. Check Start Menu items (Terminal)
         else if (start_menu_open && mx >= 2 && mx <= 202 && my >= (int32_t)(screen_h - 30 - 60 - 2) && my <= (int32_t)(screen_h - 30 - 2)) {
-            uint32_t menu_y = screen_h - 30 - 60 - 2;
+            int32_t menu_y = (int32_t)(screen_h - 30 - 60 - 2);
             if (my >= menu_y + 15 && my <= menu_y + 45) {
                 if (!terminal_is_open()) terminal_toggle();
             }

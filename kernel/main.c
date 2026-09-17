@@ -1,3 +1,5 @@
+#include <stdint.h>
+#include <stddef.h>
 #include "../include/gdt.h"
 #include "../include/idt.h"
 #include "../include/timer.h"
@@ -5,13 +7,14 @@
 #include "../include/pmm.h"
 #include "../include/multiboot.h"
 #include "../include/graphics.h"
+#include "../include/bga.h"
 #include "../include/mouse.h"
 #include "../include/desktop.h"
 #include "../include/terminal.h"
-#include <stdint.h>
+#include "../include/fs.h"
+#include "../include/string.h"
 
 extern void isr_install(void);
-extern int strcmp(const char*, const char*);
 
 void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC) {
@@ -19,46 +22,39 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
         return;
     }
 
-    // Install GDT
+    // Install Global Descriptor Table (GDT)
     init_gdt();
 
-    // Install IDT and ISRs
+    // Install Interrupt Descriptor Table (IDT) and ISRs
     init_idt();
     isr_install();
 
-    // Initialize Memory
-    init_pmm(0x100000 * 128); // Assume 128MB RAM for now
+    // Initialize Physical Memory Manager (PMM)
+    // Reserves lower 1MB for BIOS/hardware, marks available RAM in bitmap
+    init_pmm(0x100000 * 128); // 128MB RAM initialization
     pmm_init_region(0x100000, 0x100000 * 128 - 0x100000);
 
-    // Initialize devices
+    // Initialize core hardware timers and input
     init_timer(50);
     init_keyboard();
 
-    // Set up BGA for 800x600x32
-    #include "../include/bga.h"
+    // Set up Bochs Graphics Adapter (BGA) for 800x600 @ 32bpp
     bga_init(800, 600, 32);
     uint32_t lfb = bga_get_lfb();
 
-    // Initialize our basic graphics driver with the BGA framebuffer
+    // Initialize 2D graphics framebuffer subsystem
     graphics_init(lfb, 800, 600, 800 * 4, 32);
 
-    // Initialize mouse
+    // Initialize PS/2 mouse driver
     init_mouse();
     
-    // Enable interrupts now that everything is set up
+    // Enable hardware interrupts
     __asm__ volatile("sti");
 
-    // Initialize the desktop UI
-    // desktop_init() is called inside desktop_render() when mouse moves,
-    // but we can force a first frame draw here.
-    extern void desktop_init(void);
-    extern void desktop_render(void);
-    extern void show_loading_screen(void);
-    
+    // Display initial loading sequence
     show_loading_screen();
     
-    // Initialize filesystem from Initrd if present
-    #include "../include/fs.h"
+    // Initialize Virtual Ramdisk (initrd) filesystem if multiboot module is passed
     if (mbd->flags & 0x08) {
         if (mbd->mods_count > 0) {
             multiboot_module_t* mod = (multiboot_module_t*)mbd->mods_addr;
@@ -66,12 +62,13 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
         }
     }
     
+    // Initialize terminal emulator and desktop window manager
     terminal_init();
     desktop_init();
 
+    // Main event and render loop
     while (1) {
         desktop_render();
-        // Wait for interrupt
         __asm__ volatile("hlt");
     }
 }

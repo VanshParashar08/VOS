@@ -1,8 +1,8 @@
 #include "../include/pmm.h"
 #include "../include/string.h"
 
-// For simplicity in this portfolio OS, we statically allocate a bitmap for up to 4GB of memory
-// 4GB / 4096 = 1,048,576 blocks
+// Statically allocate a bitmap for tracking physical frames across up to 4GB of memory
+// 4GB / 4096 = 1,048,576 blocks (frames)
 // 1,048,576 blocks / 8 bits = 131,072 bytes (128 KB)
 static uint8_t pmm_bitmap[131072]; 
 static uint32_t max_blocks = 0;

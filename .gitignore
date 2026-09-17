@@ -3,7 +3,10 @@
 *.bin
 *.img
 *.iso
+isodir/
 
-# Logs and specific files
+# Logs and Debug Dumps
 *.log
+*.txt
+!fs/*.txt
 .DS_Store

@@ -5,6 +5,7 @@
 volatile uint32_t tick = 0;
 
 static void timer_callback(registers_t *regs) {
+    (void)regs;
     tick++;
 }
 
