@@ -1,0 +1,9 @@
+# Build Artifacts
+*.o
+*.bin
+*.img
+*.iso
+
+# Logs and specific files
+*.log
+.DS_Store
